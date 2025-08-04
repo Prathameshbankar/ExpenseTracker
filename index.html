@@ -1,0 +1,251 @@
+<!-- Save this as expense_tracker.html and open in browser -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Expense Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: linear-gradient(to right, #d3cce3, #e9e4f0);
+    }
+    h1 {
+      text-align: center;
+      background-color: #4b0082;
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    table, th, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    table {
+      width: 100%;
+      background-color: #fff;
+      margin-top: 20px;
+    }
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 10px;
+    }
+    .form-row label {
+      flex: 1 1 200px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 6px 12px;
+      border: none;
+      background-color: #4b0082;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #6a0dad;
+    }
+    .filter-container {
+      margin-top: 20px;
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>💼 Personal Expense Tracker</h1>
+
+  <form id="expenseForm">
+    <div class="form-row">
+      <label>Date: <input type="date" id="date" required /></label>
+      <label>Month: <input type="month" id="month" required /></label>
+      <label>Category 1:
+        <select id="category1" required>
+          <option value="">Select</option>
+          <option>Rent</option>
+          <option>Food</option>
+          <option>Transportation</option>
+          <option>Utilities</option>
+          <option>Entertainment</option>
+          <option>Personal Expenses</option>
+          <option>Saving and investment</option>
+          <option>Health Care</option>
+          <option>Maintenance</option>
+          <option>Miscellaneous Expenses</option>
+          <option>Gifts</option>
+          <option>Online Shopping</option>
+        </select>
+      </label>
+      <label>Category 2:
+        <select id="category2"></select>
+      </label>
+    </div>
+    <div class="form-row">
+      <label>Description: <input type="text" id="description" /></label>
+      <label>Mode of Payment:
+        <select id="payment">
+          <option>Cash</option>
+          <option>Online</option>
+        </select>
+      </label>
+      <label>Amount: <input type="number" id="amount" required /></label>
+    </div>
+    <button type="submit">Add Expense</button>
+  </form>
+
+  <div class="filter-container">
+    <h3>🔍 Filter Expenses</h3>
+    <label>Filter by Date: <input type="date" id="filterDate" /></label>
+    <label>Filter by Month: <input type="month" id="filterMonth" /></label>
+    <button onclick="filterTable()">Apply Filter</button>
+    <button onclick="resetFilter()">Reset Filter</button>
+  </div>
+
+  <button onclick="exportToCSV()">💾 Export to CSV</button>
+
+  <table id="expenseTable">
+    <thead>
+      <tr>
+        <th>SR</th>
+        <th>Date</th>
+        <th>Month</th>
+        <th>Category1</th>
+        <th>Category2</th>
+        <th>Description</th>
+        <th>Mode of Payment</th>
+        <th>Amount</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const categoryMap = {
+      "Utilities": ["Electricity Bill", "Phone Service", "Water", "Garbage Services", "Natural Gas", "Internet Service", "Cell Service"],
+      "Food": ["Grocery", "Desert", "Vegetables", "Restaurant", "Beverages", "Snacks"],
+      "Rent": ["Home Rent"],
+      "Maintenance": ["Breakdown", "Utensils"],
+      "Transportation": ["Bike", "Car", "Bus"],
+      "Entertainment": ["OTT", "Movies", "Events", "Hobbies", "Activities", "Travel"],
+      "Personal Expenses": ["Saloon", "Parlor"],
+      "Health Care": ["Hospital", "Medical", "Insurance"],
+      "Gifts": ["Gifts", "Birthday", "Events", "Wedding", "Shower"],
+      "Online Shopping": ["Amazon", "Flipkart", "Meesho"]
+    };
+
+    const form = document.getElementById("expenseForm");
+    const category1 = document.getElementById("category1");
+    const category2 = document.getElementById("category2");
+    const tableBody = document.querySelector("#expenseTable tbody");
+    let expenseData = JSON.parse(localStorage.getItem("expenseData")) || [];
+    let editingIndex = -1;
+
+    category1.addEventListener("change", function () {
+      category2.innerHTML = "";
+      (categoryMap[this.value] || []).forEach(item => {
+        const opt = document.createElement("option");
+        opt.value = opt.textContent = item;
+        category2.appendChild(opt);
+      });
+    });
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const entry = {
+        date: date.value,
+        month: month.value,
+        category1: category1.value,
+        category2: category2.value,
+        description: description.value,
+        payment: payment.value,
+        amount: amount.value
+      };
+
+      if (editingIndex >= 0) {
+        expenseData[editingIndex] = entry;
+        editingIndex = -1;
+      } else {
+        expenseData.push(entry);
+      }
+
+      localStorage.setItem("expenseData", JSON.stringify(expenseData));
+      form.reset();
+      category2.innerHTML = "";
+      renderTable();
+    });
+
+    function renderTable() {
+      tableBody.innerHTML = "";
+      expenseData.forEach((entry, i) => {
+        const row = tableBody.insertRow();
+        [i + 1, entry.date, entry.month, entry.category1, entry.category2, entry.description, entry.payment, entry.amount]
+          .forEach(text => row.insertCell().textContent = text);
+
+        const actions = row.insertCell();
+        actions.innerHTML = `<button onclick="editEntry(${i})">✏️</button> <button onclick="deleteEntry(${i})">🗑️</button>`;
+      });
+    }
+
+    function deleteEntry(index) {
+      if (confirm("Delete this entry?")) {
+        expenseData.splice(index, 1);
+        localStorage.setItem("expenseData", JSON.stringify(expenseData));
+        renderTable();
+      }
+    }
+
+    function editEntry(index) {
+      const e = expenseData[index];
+      date.value = e.date;
+      month.value = e.month;
+      description.value = e.description;
+      payment.value = e.payment;
+      amount.value = e.amount;
+      category1.value = e.category1;
+      category1.dispatchEvent(new Event("change"));
+      setTimeout(() => category2.value = e.category2, 100);
+      editingIndex = index;
+      scrollTo(0, 0);
+    }
+
+    function exportToCSV() {
+      let csv = 'SR,Date,Month,Category1,Category2,Description,Mode of Payment,Amount\n';
+      expenseData.forEach((e, i) =>
+        csv += [i + 1, e.date, e.month, e.category1, e.category2, e.description, e.payment, e.amount].join(',') + '\\n'
+      );
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const link = Object.assign(document.createElement('a'), {
+        href: URL.createObjectURL(blob),
+        download: 'expenses.csv'
+      });
+      link.click();
+    }
+
+    function filterTable() {
+      const d = filterDate.value, m = filterMonth.value;
+      [...tableBody.rows].forEach(row => {
+        const show = (!d || row.cells[1].textContent === d) &&
+                     (!m || row.cells[2].textContent === m);
+        row.style.display = show ? '' : 'none';
+      });
+    }
+
+    function resetFilter() {
+      filterDate.value = "";
+      filterMonth.value = "";
+      renderTable();
+    }
+
+    renderTable();
+  </script>
+</body>
+</html>
