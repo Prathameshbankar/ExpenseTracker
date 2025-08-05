@@ -33,7 +33,16 @@ let isDataLoaded = false;
 // Firebase functions
 async function loadExpensesFromFirebase() {
   try {
-    const { collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    // Check if Firebase is initialized
+    if (!window.db) {
+      console.log("Firebase not initialized, using localStorage fallback");
+      expenseData = JSON.parse(localStorage.getItem("expenseData")) || [];
+      isDataLoaded = true;
+      renderTable();
+      return;
+    }
+
+    const { collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js');
     const expensesRef = collection(window.db, 'expenses');
     const q = query(expensesRef, orderBy('timestamp', 'desc'));
     const querySnapshot = await getDocs(q);
@@ -45,6 +54,7 @@ async function loadExpensesFromFirebase() {
     
     isDataLoaded = true;
     renderTable();
+    console.log("Loaded", expenseData.length, "expenses from Firebase");
   } catch (error) {
     console.error("Error loading expenses:", error);
     // Fallback to localStorage if Firebase fails
@@ -56,23 +66,41 @@ async function loadExpensesFromFirebase() {
 
 async function saveExpenseToFirebase(expense) {
   try {
-    const { collection, addDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    // Check if Firebase is initialized
+    if (!window.db) {
+      console.log("Firebase not initialized, using localStorage fallback");
+      expenseData.push(expense);
+      localStorage.setItem("expenseData", JSON.stringify(expenseData));
+      return "localStorage";
+    }
+
+    const { collection, addDoc } = await import('https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js');
     const expensesRef = collection(window.db, 'expenses');
     const docRef = await addDoc(expensesRef, expense);
+    console.log("Expense saved to Firebase with ID:", docRef.id);
     return docRef.id;
   } catch (error) {
     console.error("Error saving expense:", error);
     // Fallback to localStorage
+    expenseData.push(expense);
     localStorage.setItem("expenseData", JSON.stringify(expenseData));
-    return null;
+    return "localStorage";
   }
 }
 
 async function updateExpenseInFirebase(expenseId, updatedExpense) {
   try {
-    const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    // Check if Firebase is initialized
+    if (!window.db || expenseId === "localStorage") {
+      console.log("Using localStorage for update");
+      localStorage.setItem("expenseData", JSON.stringify(expenseData));
+      return true;
+    }
+
+    const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js');
     const expenseRef = doc(window.db, 'expenses', expenseId);
     await updateDoc(expenseRef, updatedExpense);
+    console.log("Expense updated in Firebase");
     return true;
   } catch (error) {
     console.error("Error updating expense:", error);
@@ -84,9 +112,17 @@ async function updateExpenseInFirebase(expenseId, updatedExpense) {
 
 async function deleteExpenseFromFirebase(expenseId) {
   try {
-    const { doc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    // Check if Firebase is initialized
+    if (!window.db || expenseId === "localStorage") {
+      console.log("Using localStorage for delete");
+      localStorage.setItem("expenseData", JSON.stringify(expenseData));
+      return true;
+    }
+
+    const { doc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js');
     const expenseRef = doc(window.db, 'expenses', expenseId);
     await deleteDoc(expenseRef);
+    console.log("Expense deleted from Firebase");
     return true;
   } catch (error) {
     console.error("Error deleting expense:", error);
