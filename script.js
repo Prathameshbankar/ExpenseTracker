@@ -26,18 +26,86 @@ const resetFilterBtn = document.getElementById("resetFilter");
 const exportToCSVBtn = document.getElementById("exportToCSV");
 
 // Data
-let expenseData = JSON.parse(localStorage.getItem("expenseData")) || [];
+let expenseData = [];
 let editingIndex = -1;
+let isDataLoaded = false;
+
+// Firebase functions
+async function loadExpensesFromFirebase() {
+  try {
+    const { collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const expensesRef = collection(window.db, 'expenses');
+    const q = query(expensesRef, orderBy('timestamp', 'desc'));
+    const querySnapshot = await getDocs(q);
+    
+    expenseData = [];
+    querySnapshot.forEach((doc) => {
+      expenseData.push({ id: doc.id, ...doc.data() });
+    });
+    
+    isDataLoaded = true;
+    renderTable();
+  } catch (error) {
+    console.error("Error loading expenses:", error);
+    // Fallback to localStorage if Firebase fails
+    expenseData = JSON.parse(localStorage.getItem("expenseData")) || [];
+    isDataLoaded = true;
+    renderTable();
+  }
+}
+
+async function saveExpenseToFirebase(expense) {
+  try {
+    const { collection, addDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const expensesRef = collection(window.db, 'expenses');
+    const docRef = await addDoc(expensesRef, expense);
+    return docRef.id;
+  } catch (error) {
+    console.error("Error saving expense:", error);
+    // Fallback to localStorage
+    localStorage.setItem("expenseData", JSON.stringify(expenseData));
+    return null;
+  }
+}
+
+async function updateExpenseInFirebase(expenseId, updatedExpense) {
+  try {
+    const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const expenseRef = doc(window.db, 'expenses', expenseId);
+    await updateDoc(expenseRef, updatedExpense);
+    return true;
+  } catch (error) {
+    console.error("Error updating expense:", error);
+    // Fallback to localStorage
+    localStorage.setItem("expenseData", JSON.stringify(expenseData));
+    return false;
+  }
+}
+
+async function deleteExpenseFromFirebase(expenseId) {
+  try {
+    const { doc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const expenseRef = doc(window.db, 'expenses', expenseId);
+    await deleteDoc(expenseRef);
+    return true;
+  } catch (error) {
+    console.error("Error deleting expense:", error);
+    // Fallback to localStorage
+    localStorage.setItem("expenseData", JSON.stringify(expenseData));
+    return false;
+  }
+}
 
 // Initialize the app
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Set default dates
   const today = new Date().toISOString().split('T')[0];
   document.getElementById("date").value = today;
   filterDateFrom.value = today;
   filterDateTo.value = today;
   
-  renderTable();
+  // Load expenses from Firebase
+  await loadExpensesFromFirebase();
   
   // Event listeners
   category1.addEventListener("change", handleCategoryChange);
@@ -90,7 +158,7 @@ function handleCategoryChange() {
   }
 }
 
-function handleFormSubmit(e) {
+async function handleFormSubmit(e) {
   e.preventDefault();
   
   const subcategoryValue = category1.value === "Other" 
@@ -107,22 +175,33 @@ function handleFormSubmit(e) {
     timestamp: new Date(document.getElementById("date").value).getTime()
   };
 
-  if (editingIndex >= 0) {
-    expenseData[editingIndex] = entry;
-    editingIndex = -1;
-    form.querySelector('button[type="submit"]').innerHTML = '<i class="fas fa-save mr-2"></i> Save Expense';
-  } else {
-    expenseData.push(entry);
-  }
+  try {
+    if (editingIndex >= 0) {
+      const success = await updateExpenseInFirebase(expenseData[editingIndex].id, entry);
+      if (success) {
+        expenseData[editingIndex] = { ...expenseData[editingIndex], ...entry };
+        editingIndex = -1;
+        form.querySelector('button[type="submit"]').innerHTML = '<i class="fas fa-save mr-2"></i> Save Expense';
+      }
+    } else {
+      const id = await saveExpenseToFirebase(entry);
+      if (id) {
+        entry.id = id;
+        expenseData.unshift(entry); // Add to beginning for newest first
+      }
+    }
 
-  localStorage.setItem("expenseData", JSON.stringify(expenseData));
-  form.reset();
-  
-  // Reset date to today and category dropdowns
-  document.getElementById("date").value = new Date().toISOString().split('T')[0];
-  handleCategoryChange();
-  
-  renderTable();
+    form.reset();
+    
+    // Reset date to today and category dropdowns
+    document.getElementById("date").value = new Date().toISOString().split('T')[0];
+    handleCategoryChange();
+    
+    renderTable();
+  } catch (error) {
+    console.error("Error handling form submission:", error);
+    alert("Failed to save expense. Please try again.");
+  }
 }
 
 function renderTable(data = expenseData) {
@@ -224,11 +303,19 @@ function formatDate(dateString) {
   return new Date(dateString).toLocaleDateString('en-US', options);
 }
 
-function deleteEntry(index) {
+async function deleteEntry(index) {
   if (confirm("Are you sure you want to delete this expense?")) {
-    expenseData.splice(index, 1);
-    localStorage.setItem("expenseData", JSON.stringify(expenseData));
-    renderTable();
+    try {
+      const entryToDelete = expenseData[index];
+      const success = await deleteExpenseFromFirebase(entryToDelete.id);
+      if (success) {
+        expenseData.splice(index, 1);
+        renderTable();
+      }
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      alert("Failed to delete expense. Please try again.");
+    }
   }
 }
 
