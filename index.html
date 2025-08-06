@@ -39,7 +39,20 @@
   <script src="script.js" defer></script>
 </head>
 <body class="bg-gray-50 min-h-screen p-2 sm:p-4 lg:p-8">
-  <div class="max-w-6xl mx-auto">
+  <!-- Loading Screen -->
+  <div id="loadingScreen" class="loading-screen">
+    <div class="loading-logo">
+      <i class="fas fa-wallet"></i>
+    </div>
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading Expense Tracker...</div>
+    <div class="loading-progress">
+      <div class="loading-progress-bar"></div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div id="mainContent" class="max-w-6xl mx-auto content-fade-in" style="opacity: 0;">
     <!-- Header -->
     <div class="bg-indigo-600 text-white p-4 sm:p-5 rounded-xl shadow-lg mb-6 sm:mb-8">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
@@ -56,7 +69,7 @@
     </div>
 
     <!-- Add Expense Form -->
-    <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-8">
+    <div id="expenseFormContainer" class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-8">
       <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
         <i class="fas fa-plus-circle mr-2 text-indigo-600"></i> Add New Expense
       </h2>
@@ -119,8 +132,11 @@
         </div>
         
         <div class="flex justify-end">
-          <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-6 rounded-md transition duration-200 shadow">
-            <i class="fas fa-save mr-2"></i> Save Expense
+          <button type="submit" id="submitBtn" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-6 rounded-md transition duration-200 shadow">
+            <span class="btn-text">
+              <i class="fas fa-save mr-2"></i> Save Expense
+            </span>
+            <div class="btn-spinner" style="display: none;"></div>
           </button>
         </div>
       </form>
@@ -182,7 +198,9 @@
               <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody id="tableBody" class="bg-white divide-y divide-gray-200"></tbody>
+          <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+            <!-- Loading skeleton will be inserted here -->
+          </tbody>
         </table>
       </div>
     </div>

@@ -24,18 +24,128 @@ const filterDateFrom = document.getElementById("filterDateFrom");
 const filterDateTo = document.getElementById("filterDateTo");
 const resetFilterBtn = document.getElementById("resetFilter");
 const exportToCSVBtn = document.getElementById("exportToCSV");
+const loadingScreen = document.getElementById("loadingScreen");
+const mainContent = document.getElementById("mainContent");
+const submitBtn = document.getElementById("submitBtn");
 
 // Data
 let expenseData = [];
 let editingIndex = -1;
 let isDataLoaded = false;
 
+// Loading animation functions
+function showLoadingScreen() {
+  loadingScreen.classList.remove('hidden');
+  mainContent.style.opacity = '0';
+}
+
+function hideLoadingScreen() {
+  loadingScreen.classList.add('hidden');
+  mainContent.style.opacity = '1';
+}
+
+function showTableLoading() {
+  tableBody.innerHTML = `
+    <tr>
+      <td colspan="7">
+        <div class="table-loading">
+          <div class="table-loading-spinner"></div>
+          <div class="table-loading-text">Loading expenses...</div>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function showTableSkeleton() {
+  tableBody.innerHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const row = document.createElement('tr');
+    row.className = 'skeleton-row';
+    row.innerHTML = `
+      <td colspan="7">
+        <div class="flex items-center space-x-4">
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+        </div>
+      </td>
+    `;
+    tableBody.appendChild(row);
+  }
+}
+
+function showFormLoading() {
+  const formContainer = document.getElementById('expenseFormContainer');
+  formContainer.classList.add('form-loading');
+  
+  // Add loading indicator
+  const loadingIndicator = document.createElement('div');
+  loadingIndicator.className = 'loading-indicator';
+  loadingIndicator.innerHTML = `
+    <div class="spinner"></div>
+    <span>Saving expense...</span>
+  `;
+  formContainer.appendChild(loadingIndicator);
+}
+
+function hideFormLoading() {
+  const formContainer = document.getElementById('expenseFormContainer');
+  formContainer.classList.remove('form-loading');
+  
+  // Remove loading indicator
+  const loadingIndicator = formContainer.querySelector('.loading-indicator');
+  if (loadingIndicator) {
+    loadingIndicator.remove();
+  }
+}
+
+function showButtonLoading(button) {
+  const btnText = button.querySelector('.btn-text');
+  const btnSpinner = button.querySelector('.btn-spinner');
+  
+  button.classList.add('btn-loading');
+  btnText.style.opacity = '0';
+  btnSpinner.style.display = 'block';
+}
+
+function hideButtonLoading(button) {
+  const btnText = button.querySelector('.btn-text');
+  const btnSpinner = button.querySelector('.btn-spinner');
+  
+  button.classList.remove('btn-loading');
+  btnText.style.opacity = '1';
+  btnSpinner.style.display = 'none';
+}
+
+function addRowAnimation(row) {
+  row.classList.add('table-row-enter');
+  setTimeout(() => {
+    row.classList.remove('table-row-enter');
+  }, 300);
+}
+
+function highlightUpdatedRow(row) {
+  row.classList.add('table-row-update');
+  setTimeout(() => {
+    row.classList.remove('table-row-update');
+  }, 500);
+}
+
 // Firebase functions
 async function loadExpensesFromFirebase() {
   try {
+    // Show table loading
+    showTableSkeleton();
+    
     // Check if Firebase is initialized
     if (!window.db) {
       console.log("Firebase not initialized, using localStorage fallback");
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate loading time
       expenseData = JSON.parse(localStorage.getItem("expenseData")) || [];
       isDataLoaded = true;
       renderTable();
@@ -69,6 +179,7 @@ async function saveExpenseToFirebase(expense) {
     // Check if Firebase is initialized
     if (!window.db) {
       console.log("Firebase not initialized, using localStorage fallback");
+      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate saving time
       expenseData.push(expense);
       localStorage.setItem("expenseData", JSON.stringify(expenseData));
       return "localStorage";
@@ -93,6 +204,7 @@ async function updateExpenseInFirebase(expenseId, updatedExpense) {
     // Check if Firebase is initialized
     if (!window.db || expenseId === "localStorage") {
       console.log("Using localStorage for update");
+      await new Promise(resolve => setTimeout(resolve, 600)); // Simulate update time
       localStorage.setItem("expenseData", JSON.stringify(expenseData));
       return true;
     }
@@ -115,6 +227,7 @@ async function deleteExpenseFromFirebase(expenseId) {
     // Check if Firebase is initialized
     if (!window.db || expenseId === "localStorage") {
       console.log("Using localStorage for delete");
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delete time
       localStorage.setItem("expenseData", JSON.stringify(expenseData));
       return true;
     }
@@ -134,6 +247,12 @@ async function deleteExpenseFromFirebase(expenseId) {
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', async () => {
+  // Show loading screen initially
+  showLoadingScreen();
+  
+  // Simulate initial loading time
+  await new Promise(resolve => setTimeout(resolve, 700));
+  
   // Set default dates
   const today = new Date().toISOString().split('T')[0];
   document.getElementById("date").value = today;
@@ -142,6 +261,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Load expenses from Firebase
   await loadExpensesFromFirebase();
+  
+  // Hide loading screen and show main content
+  hideLoadingScreen();
   
   // Event listeners
   category1.addEventListener("change", handleCategoryChange);
@@ -197,6 +319,10 @@ function handleCategoryChange() {
 async function handleFormSubmit(e) {
   e.preventDefault();
   
+  // Show loading states
+  showButtonLoading(submitBtn);
+  showFormLoading();
+  
   const subcategoryValue = category1.value === "Other" 
     ? document.getElementById("customCategory").value || "-"
     : document.getElementById("category2").value || "-";
@@ -217,13 +343,17 @@ async function handleFormSubmit(e) {
       if (success) {
         expenseData[editingIndex] = { ...expenseData[editingIndex], ...entry };
         editingIndex = -1;
-        form.querySelector('button[type="submit"]').innerHTML = '<i class="fas fa-save mr-2"></i> Save Expense';
+        submitBtn.querySelector('.btn-text').innerHTML = '<i class="fas fa-save mr-2"></i> Save Expense';
+        // Show update success message
+        showSuccessMessage("Expense updated successfully!");
       }
     } else {
       const id = await saveExpenseToFirebase(entry);
       if (id) {
         entry.id = id;
         expenseData.unshift(entry); // Add to beginning for newest first
+        // Show add success message
+        showSuccessMessage("Expense added successfully!");
       }
     }
 
@@ -234,10 +364,47 @@ async function handleFormSubmit(e) {
     handleCategoryChange();
     
     renderTable();
+    
   } catch (error) {
     console.error("Error handling form submission:", error);
-    alert("Failed to save expense. Please try again.");
+    showErrorMessage("Failed to save expense. Please try again.");
+  } finally {
+    // Hide loading states
+    hideButtonLoading(submitBtn);
+    hideFormLoading();
   }
+}
+
+function showSuccessMessage(message) {
+  const notification = document.createElement('div');
+  notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 bounce-in';
+  notification.innerHTML = `
+    <div class="flex items-center">
+      <i class="fas fa-check-circle mr-2"></i>
+      <span>${message}</span>
+    </div>
+  `;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
+}
+
+function showErrorMessage(message) {
+  const notification = document.createElement('div');
+  notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 bounce-in';
+  notification.innerHTML = `
+    <div class="flex items-center">
+      <i class="fas fa-exclamation-circle mr-2"></i>
+      <span>${message}</span>
+    </div>
+  `;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
 }
 
 function renderTable(data = expenseData) {
@@ -278,6 +445,12 @@ function renderTable(data = expenseData) {
       `;
       
       tableBody.appendChild(row);
+      
+      // Add animation to new rows
+      if (!isDataLoaded) {
+        addRowAnimation(row);
+      }
+      
       total += parseFloat(entry.amount);
     });
   }
@@ -347,10 +520,11 @@ async function deleteEntry(index) {
       if (success) {
         expenseData.splice(index, 1);
         renderTable();
+        showSuccessMessage("Expense deleted successfully!");
       }
     } catch (error) {
       console.error("Error deleting expense:", error);
-      alert("Failed to delete expense. Please try again.");
+      showErrorMessage("Failed to delete expense. Please try again.");
     }
   }
 }
@@ -378,7 +552,7 @@ function editEntry(index) {
   }, 100);
   
   editingIndex = index;
-  form.querySelector('button[type="submit"]').innerHTML = '<i class="fas fa-edit mr-2"></i> Update Expense';
+  submitBtn.querySelector('.btn-text').innerHTML = '<i class="fas fa-edit mr-2"></i> Update Expense';
   
   // Scroll to form
   form.scrollIntoView({ behavior: 'smooth' });
@@ -386,7 +560,7 @@ function editEntry(index) {
 
 function exportToCSV() {
   if (expenseData.length === 0) {
-    alert("No expenses to export!");
+    showErrorMessage("No expenses to export!");
     return;
   }
   
@@ -412,6 +586,8 @@ function exportToCSV() {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  
+  showSuccessMessage("CSV exported successfully!");
 }
 
 // Make functions available globally for inline event handlers
