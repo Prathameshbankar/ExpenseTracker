@@ -16,6 +16,10 @@ const topCategoriesTable = document.getElementById("topCategoriesTable");
 
 // Initialize the dashboard
 document.addEventListener('DOMContentLoaded', async () => {
+  // Show modern loading overlay
+  const loadingOverlay = document.getElementById('dashboardLoadingOverlay');
+  if (loadingOverlay) loadingOverlay.classList.remove('hide');
+
   // Set default date range (last 30 days)
   const today = new Date();
   const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
@@ -27,6 +31,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadExpensesFromFirebase();
   initializeEventListeners();
   updateDashboard();
+
+  // Trigger dashboard entry animations
+  setTimeout(() => {
+    document.querySelectorAll('.dashboard-animate').forEach(el => {
+      el.style.opacity = '';
+      el.style.transform = '';
+    });
+  }, 100);
+
+  // Hide modern loading overlay after everything is ready
+  if (loadingOverlay) {
+    setTimeout(() => {
+      loadingOverlay.classList.add('hide');
+    }, 700);
+  }
 });
 
 // Firebase functions (same as main app)

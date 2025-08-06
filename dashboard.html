@@ -40,6 +40,17 @@
   <script src="dashboard.js" defer></script>
 </head>
 <body class="bg-gray-50 min-h-screen p-2 sm:p-4 lg:p-8">
+  <!-- Modern Dashboard Loading Overlay -->
+  <div id="dashboardLoadingOverlay" class="dashboard-loading-overlay">
+    <div class="dashboard-loading-logo">
+      <i class="fas fa-chart-line"></i> Dashboard
+    </div>
+    <div class="dashboard-loading-spinner"></div>
+    <div class="dashboard-loading-text">Loading analytics...</div>
+    <div class="dashboard-loading-progress">
+      <div class="dashboard-loading-progress-bar"></div>
+    </div>
+  </div>
   <div class="max-w-7xl mx-auto">
     <!-- Header -->
     <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 sm:p-6 rounded-xl shadow-lg mb-6 sm:mb-8">
@@ -63,7 +74,7 @@
 
     <!-- Quick Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <div class="bg-white rounded-xl shadow-md p-6">
+      <div class="bg-white rounded-xl shadow-md p-6 dashboard-animate dashboard-stagger-1">
         <div class="flex items-center">
           <div class="p-3 rounded-full bg-blue-100 text-blue-600">
             <i class="fas fa-calendar-day text-xl"></i>
@@ -75,7 +86,7 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-xl shadow-md p-6">
+      <div class="bg-white rounded-xl shadow-md p-6 dashboard-animate dashboard-stagger-2">
         <div class="flex items-center">
           <div class="p-3 rounded-full bg-green-100 text-green-600">
             <i class="fas fa-calendar-week text-xl"></i>
@@ -87,7 +98,7 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-xl shadow-md p-6">
+      <div class="bg-white rounded-xl shadow-md p-6 dashboard-animate dashboard-stagger-3">
         <div class="flex items-center">
           <div class="p-3 rounded-full bg-purple-100 text-purple-600">
             <i class="fas fa-calendar-alt text-xl"></i>
@@ -99,7 +110,7 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-xl shadow-md p-6">
+      <div class="bg-white rounded-xl shadow-md p-6 dashboard-animate dashboard-stagger-4">
         <div class="flex items-center">
           <div class="p-3 rounded-full bg-orange-100 text-orange-600">
             <i class="fas fa-chart-pie text-xl"></i>
@@ -113,7 +124,7 @@
     </div>
 
     <!-- Date Range Filter -->
-    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8 dashboard-animate dashboard-stagger-5">
       <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-4 lg:space-y-0">
         <h3 class="text-lg font-semibold text-gray-800">
           <i class="fas fa-filter mr-2 text-indigo-600"></i> Analysis Period
@@ -147,7 +158,7 @@
     <!-- Charts Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
       <!-- Expense Trend Chart -->
-      <div class="bg-white rounded-xl shadow-md p-6">
+      <div class="bg-white rounded-xl shadow-md p-6 dashboard-animate dashboard-stagger-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">
           <i class="fas fa-chart-line mr-2 text-indigo-600"></i> Expense Trend
         </h3>
@@ -157,7 +168,7 @@
       </div>
 
       <!-- Category Distribution -->
-      <div class="bg-white rounded-xl shadow-md p-6">
+      <div class="bg-white rounded-xl shadow-md p-6 dashboard-animate dashboard-stagger-7">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">
           <i class="fas fa-chart-pie mr-2 text-indigo-600"></i> Category Distribution
         </h3>
@@ -170,7 +181,7 @@
     <!-- Additional Analytics -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
       <!-- Payment Method Analysis -->
-      <div class="bg-white rounded-xl shadow-md p-6">
+      <div class="bg-white rounded-xl shadow-md p-6 dashboard-animate dashboard-stagger-8">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">
           <i class="fas fa-credit-card mr-2 text-indigo-600"></i> Payment Method Analysis
         </h3>
@@ -180,7 +191,7 @@
       </div>
 
       <!-- Daily Spending Pattern -->
-      <div class="bg-white rounded-xl shadow-md p-6">
+      <div class="bg-white rounded-xl shadow-md p-6 dashboard-animate dashboard-stagger-9">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">
           <i class="fas fa-calendar-check mr-2 text-indigo-600"></i> Daily Spending Pattern
         </h3>
@@ -191,7 +202,7 @@
     </div>
 
     <!-- Insights Section -->
-    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8 dashboard-animate dashboard-stagger-10">
       <h3 class="text-lg font-semibold text-gray-800 mb-4">
         <i class="fas fa-lightbulb mr-2 text-indigo-600"></i> Spending Insights
       </h3>
@@ -201,7 +212,7 @@
     </div>
 
     <!-- Top Categories Table -->
-    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8 dashboard-animate dashboard-stagger-10">
       <h3 class="text-lg font-semibold text-gray-800 mb-4">
         <i class="fas fa-list-ol mr-2 text-indigo-600"></i> Top Spending Categories
       </h3>

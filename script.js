@@ -376,19 +376,21 @@ async function handleFormSubmit(e) {
 }
 
 function showSuccessMessage(message) {
+  // Remove any existing popup
+  const oldPopup = document.querySelector('.success-popup');
+  if (oldPopup) oldPopup.remove();
+
   const notification = document.createElement('div');
-  notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 bounce-in';
+  notification.className = 'success-popup';
   notification.innerHTML = `
-    <div class="flex items-center">
-      <i class="fas fa-check-circle mr-2"></i>
-      <span>${message}</span>
-    </div>
+    <span class="success-icon"><i class="fas fa-check-circle"></i></span>
+    <span>${message}</span>
   `;
   document.body.appendChild(notification);
   
   setTimeout(() => {
     notification.remove();
-  }, 3000);
+  }, 2600);
 }
 
 function showErrorMessage(message) {
@@ -512,20 +514,71 @@ function formatDate(dateString) {
   return new Date(dateString).toLocaleDateString('en-US', options);
 }
 
-async function deleteEntry(index) {
-  if (confirm("Are you sure you want to delete this expense?")) {
-    try {
-      const entryToDelete = expenseData[index];
-      const success = await deleteExpenseFromFirebase(entryToDelete.id);
-      if (success) {
-        expenseData.splice(index, 1);
-        renderTable();
-        showSuccessMessage("Expense deleted successfully!");
+function showDeleteConfirmDialog(message) {
+  return new Promise((resolve) => {
+    // Remove any existing modal
+    const oldModal = document.getElementById('modalOverlay');
+    if (oldModal) oldModal.remove();
+
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'modalOverlay';
+
+    // Create dialog
+    const dialog = document.createElement('div');
+    dialog.className = 'modal-dialog';
+    dialog.innerHTML = `
+      <h3><i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>Confirm Deletion</h3>
+      <p>${message}</p>
+      <div class="modal-actions">
+        <button class="modal-btn confirm">Delete</button>
+        <button class="modal-btn cancel">Cancel</button>
+      </div>
+    `;
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    // Focus the confirm button
+    setTimeout(() => {
+      dialog.querySelector('.confirm').focus();
+    }, 50);
+
+    // Button handlers
+    dialog.querySelector('.confirm').onclick = () => {
+      overlay.remove();
+      resolve(true);
+    };
+    dialog.querySelector('.cancel').onclick = () => {
+      overlay.remove();
+      resolve(false);
+    };
+    // ESC key closes
+    overlay.onkeydown = (e) => {
+      if (e.key === 'Escape') {
+        overlay.remove();
+        resolve(false);
       }
-    } catch (error) {
-      console.error("Error deleting expense:", error);
-      showErrorMessage("Failed to delete expense. Please try again.");
+    };
+    overlay.tabIndex = -1;
+    overlay.focus();
+  });
+}
+
+async function deleteEntry(index) {
+  const confirmed = await showDeleteConfirmDialog('Do you want to delete this expense?');
+  if (!confirmed) return;
+  try {
+    const entryToDelete = expenseData[index];
+    const success = await deleteExpenseFromFirebase(entryToDelete.id);
+    if (success) {
+      expenseData.splice(index, 1);
+      renderTable();
+      showSuccessMessage("Expense deleted successfully!");
     }
+  } catch (error) {
+    console.error("Error deleting expense:", error);
+    showErrorMessage("Failed to delete expense. Please try again.");
   }
 }
 
