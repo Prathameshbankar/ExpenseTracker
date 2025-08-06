@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Firebase Data Checker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBT0GAKu5lf7FGAm6ke30LkB9eKJMPzfgo",
+      authDomain: "expense-tracker-ba256.firebaseapp.com",
+      projectId: "expense-tracker-ba256",
+      storageBucket: "expense-tracker-ba256.firebasestorage.app",
+      messagingSenderId: "356012048141",
+      appId: "1:356012048141:web:1844bf126a742523acfa44",
+      measurementId: "G-4SRG49YJCZ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    window.db = db;
+  </script>
+</head>
+<body class="bg-gray-50 min-h-screen p-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+      <h1 class="text-2xl font-bold text-gray-800 mb-4">
+        <i class="fas fa-database mr-2 text-blue-600"></i> Firebase Data Storage Checker
+      </h1>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-blue-50 rounded-lg p-4">
+          <h3 class="font-semibold text-blue-800 mb-2">Firebase Status</h3>
+          <div id="firebaseStatus" class="text-sm">
+            <i class="fas fa-spinner fa-spin mr-2"></i> Checking...
+          </div>
+        </div>
+        
+        <div class="bg-green-50 rounded-lg p-4">
+          <h3 class="font-semibold text-green-800 mb-2">localStorage Status</h3>
+          <div id="localStorageStatus" class="text-sm">
+            <i class="fas fa-spinner fa-spin mr-2"></i> Checking...
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex space-x-4 mb-6">
+        <button id="checkFirebase" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200">
+          <i class="fas fa-sync mr-2"></i> Check Firebase Data
+        </button>
+        <button id="checkLocalStorage" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200">
+          <i class="fas fa-database mr-2"></i> Check localStorage
+        </button>
+        <button id="clearLocalStorage" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition duration-200">
+          <i class="fas fa-trash mr-2"></i> Clear localStorage
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">Data Comparison</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <h3 class="font-semibold text-gray-700 mb-3">Firebase Data</h3>
+          <div id="firebaseData" class="bg-gray-100 rounded-lg p-4 h-64 overflow-y-auto">
+            <p class="text-gray-500">Click "Check Firebase Data" to load...</p>
+          </div>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-700 mb-3">localStorage Data</h3>
+          <div id="localStorageData" class="bg-gray-100 rounded-lg p-4 h-64 overflow-y-auto">
+            <p class="text-gray-500">Click "Check localStorage" to load...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">Storage Statistics</h2>
+      <div id="statistics" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Statistics will be populated here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Check Firebase connection
+    function checkFirebaseStatus() {
+      const statusDiv = document.getElementById('firebaseStatus');
+      if (window.db) {
+        statusDiv.innerHTML = '<i class="fas fa-check-circle text-green-600 mr-2"></i>Connected to Firebase';
+        statusDiv.className = 'text-sm text-green-600';
+      } else {
+        statusDiv.innerHTML = '<i class="fas fa-times-circle text-red-600 mr-2"></i>Firebase not available';
+        statusDiv.className = 'text-sm text-red-600';
+      }
+    }
+
+    // Check localStorage
+    function checkLocalStorageStatus() {
+      const statusDiv = document.getElementById('localStorageStatus');
+      const data = localStorage.getItem("expenseData");
+      if (data) {
+        const expenses = JSON.parse(data);
+        statusDiv.innerHTML = `<i class="fas fa-check-circle text-green-600 mr-2"></i>${expenses.length} expenses found`;
+        statusDiv.className = 'text-sm text-green-600';
+      } else {
+        statusDiv.innerHTML = '<i class="fas fa-info-circle text-blue-600 mr-2"></i>No data in localStorage';
+        statusDiv.className = 'text-sm text-blue-600';
+      }
+    }
+
+    // Load Firebase data
+    async function loadFirebaseData() {
+      const dataDiv = document.getElementById('firebaseData');
+      dataDiv.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+      
+      try {
+        if (!window.db) {
+          dataDiv.innerHTML = '<p class="text-red-500">Firebase not available</p>';
+          return;
+        }
+
+        const { collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js');
+        const expensesRef = collection(window.db, 'expenses');
+        const q = query(expensesRef, orderBy('timestamp', 'desc'));
+        const querySnapshot = await getDocs(q);
+        
+        const expenses = [];
+        querySnapshot.forEach((doc) => {
+          expenses.push({ id: doc.id, ...doc.data() });
+        });
+        
+        if (expenses.length === 0) {
+          dataDiv.innerHTML = '<p class="text-gray-500">No expenses found in Firebase</p>';
+        } else {
+          dataDiv.innerHTML = `<pre class="text-xs">${JSON.stringify(expenses, null, 2)}</pre>`;
+        }
+      } catch (error) {
+        dataDiv.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
+      }
+    }
+
+    // Load localStorage data
+    function loadLocalStorageData() {
+      const dataDiv = document.getElementById('localStorageData');
+      const data = localStorage.getItem("expenseData");
+      
+      if (!data) {
+        dataDiv.innerHTML = '<p class="text-gray-500">No data in localStorage</p>';
+      } else {
+        const expenses = JSON.parse(data);
+        dataDiv.innerHTML = `<pre class="text-xs">${JSON.stringify(expenses, null, 2)}</pre>`;
+      }
+    }
+
+    // Update statistics
+    function updateStatistics() {
+      const statsDiv = document.getElementById('statistics');
+      
+      // Firebase stats
+      let firebaseCount = 0;
+      let localStorageCount = 0;
+      
+      // Check localStorage
+      const localData = localStorage.getItem("expenseData");
+      if (localData) {
+        localStorageCount = JSON.parse(localData).length;
+      }
+      
+      // Firebase count will be updated after loading
+      loadFirebaseData().then(() => {
+        // This is a simplified approach - in a real app you'd get the count from the query
+        const firebaseData = document.getElementById('firebaseData');
+        if (firebaseData.innerHTML.includes('No expenses found')) {
+          firebaseCount = 0;
+        } else {
+          // Count the number of objects in the displayed data
+          try {
+            const dataText = firebaseData.querySelector('pre')?.textContent;
+            if (dataText) {
+              firebaseCount = JSON.parse(dataText).length;
+            }
+          } catch (e) {
+            firebaseCount = 0;
+          }
+        }
+        
+        statsDiv.innerHTML = `
+          <div class="bg-blue-50 rounded-lg p-4">
+            <h4 class="font-semibold text-blue-800">Firebase</h4>
+            <p class="text-2xl font-bold text-blue-600">${firebaseCount}</p>
+            <p class="text-sm text-blue-600">expenses</p>
+          </div>
+          <div class="bg-green-50 rounded-lg p-4">
+            <h4 class="font-semibold text-green-800">localStorage</h4>
+            <p class="text-2xl font-bold text-green-600">${localStorageCount}</p>
+            <p class="text-sm text-green-600">expenses</p>
+          </div>
+          <div class="bg-purple-50 rounded-lg p-4">
+            <h4 class="font-semibold text-purple-800">Storage Used</h4>
+            <p class="text-2xl font-bold text-purple-600">${(localStorage.length / 1024).toFixed(2)} KB</p>
+            <p class="text-sm text-purple-600">localStorage</p>
+          </div>
+        `;
+      });
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        checkFirebaseStatus();
+        checkLocalStorageStatus();
+      }, 1000);
+      
+      document.getElementById('checkFirebase').addEventListener('click', loadFirebaseData);
+      document.getElementById('checkLocalStorage').addEventListener('click', loadLocalStorageData);
+      document.getElementById('clearLocalStorage').addEventListener('click', () => {
+        if (confirm('Are you sure you want to clear localStorage? This will delete all local expense data.')) {
+          localStorage.removeItem("expenseData");
+          checkLocalStorageStatus();
+          loadLocalStorageData();
+          updateStatistics();
+        }
+      });
+      
+      // Auto-update statistics
+      setInterval(updateStatistics, 5000);
+    });
+  </script>
+</body>
+</html> 

@@ -53,3 +53,64 @@ tbody tr {
   white-space: nowrap;
   z-index: 10;
 }
+
+/* Print styles for dashboard */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .bg-gray-50 {
+    background: white !important;
+  }
+  
+  .bg-white {
+    background: white !important;
+    border: 1px solid #ddd !important;
+  }
+  
+  .shadow-md, .shadow-lg {
+    box-shadow: none !important;
+  }
+  
+  .text-white {
+    color: black !important;
+  }
+  
+  .bg-indigo-600, .bg-gradient-to-r {
+    background: #f3f4f6 !important;
+    color: black !important;
+  }
+  
+  .bg-indigo-100, .bg-green-100, .bg-purple-100, .bg-orange-100 {
+    background: #f9fafb !important;
+  }
+  
+  .text-indigo-600, .text-blue-600, .text-green-600, .text-purple-600, .text-orange-600 {
+    color: black !important;
+  }
+  
+  /* Hide buttons and interactive elements */
+  button, a {
+    display: none !important;
+  }
+  
+  /* Ensure charts are visible */
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Page breaks */
+  .bg-white {
+    page-break-inside: avoid;
+    margin-bottom: 20px;
+  }
+  
+  /* Header styling for print */
+  .bg-gradient-to-r {
+    border-bottom: 2px solid #000 !important;
+    margin-bottom: 20px !important;
+  }
+}

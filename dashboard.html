@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expense Dashboard - Analytics</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBT0GAKu5lf7FGAm6ke30LkB9eKJMPzfgo",
+      authDomain: "expense-tracker-ba256.firebaseapp.com",
+      projectId: "expense-tracker-ba256",
+      storageBucket: "expense-tracker-ba256.firebasestorage.app",
+      messagingSenderId: "356012048141",
+      appId: "1:356012048141:web:1844bf126a742523acfa44",
+      measurementId: "G-4SRG49YJCZ"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+    
+    // Make Firebase available globally
+    window.db = db;
+    console.log("Firebase initialized successfully with Firestore");
+  </script>
+  
+  <script src="dashboard.js" defer></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-2 sm:p-4 lg:p-8">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 sm:p-6 rounded-xl shadow-lg mb-6 sm:mb-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
+        <div>
+          <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold">
+            <i class="fas fa-chart-line mr-2 sm:mr-3"></i> Expense Dashboard
+          </h1>
+          <p class="text-indigo-100 mt-1">Comprehensive expense analytics and insights</p>
+        </div>
+        <div class="flex space-x-3">
+          <a href="index.html" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition duration-200">
+            <i class="fas fa-plus mr-2"></i> Add Expense
+          </a>
+          <div class="text-lg sm:text-xl lg:text-2xl bg-black bg-opacity-20 px-4 py-2 rounded-lg">
+            Total: ₹<span id="totalAmount">0.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+            <i class="fas fa-calendar-day text-xl"></i>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Today's Spending</p>
+            <p class="text-2xl font-bold text-gray-900">₹<span id="todaySpending">0.00</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-green-100 text-green-600">
+            <i class="fas fa-calendar-week text-xl"></i>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">This Week</p>
+            <p class="text-2xl font-bold text-gray-900">₹<span id="weekSpending">0.00</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+            <i class="fas fa-calendar-alt text-xl"></i>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">This Month</p>
+            <p class="text-2xl font-bold text-gray-900">₹<span id="monthSpending">0.00</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-orange-100 text-orange-600">
+            <i class="fas fa-chart-pie text-xl"></i>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Avg. Daily</p>
+            <p class="text-2xl font-bold text-gray-900">₹<span id="avgDaily">0.00</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+      <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-4 lg:space-y-0">
+        <h3 class="text-lg font-semibold text-gray-800">
+          <i class="fas fa-filter mr-2 text-indigo-600"></i> Analysis Period
+        </h3>
+        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">From Date</label>
+            <input type="date" id="dashboardDateFrom" 
+              class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">To Date</label>
+            <input type="date" id="dashboardDateTo" 
+              class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div class="flex space-x-2">
+            <button id="last7Days" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-2 rounded-md text-sm transition duration-200">
+              Last 7 Days
+            </button>
+            <button id="last30Days" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-2 rounded-md text-sm transition duration-200">
+              Last 30 Days
+            </button>
+            <button id="last3Months" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-2 rounded-md text-sm transition duration-200">
+              Last 3 Months
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <!-- Expense Trend Chart -->
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+          <i class="fas fa-chart-line mr-2 text-indigo-600"></i> Expense Trend
+        </h3>
+        <div class="h-80">
+          <canvas id="expenseTrendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Category Distribution -->
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+          <i class="fas fa-chart-pie mr-2 text-indigo-600"></i> Category Distribution
+        </h3>
+        <div class="h-80">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Analytics -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <!-- Payment Method Analysis -->
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+          <i class="fas fa-credit-card mr-2 text-indigo-600"></i> Payment Method Analysis
+        </h3>
+        <div class="h-80">
+          <canvas id="paymentChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Daily Spending Pattern -->
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+          <i class="fas fa-calendar-check mr-2 text-indigo-600"></i> Daily Spending Pattern
+        </h3>
+        <div class="h-80">
+          <canvas id="dailyPatternChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Insights Section -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">
+        <i class="fas fa-lightbulb mr-2 text-indigo-600"></i> Spending Insights
+      </h3>
+      <div id="insightsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Insights will be populated by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Top Categories Table -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">
+        <i class="fas fa-list-ol mr-2 text-indigo-600"></i> Top Spending Categories
+      </h3>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Count</th>
+            </tr>
+          </thead>
+          <tbody id="topCategoriesTable" class="bg-white divide-y divide-gray-200">
+            <!-- Will be populated by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Export Options -->
+    <div class="flex justify-end space-x-3 mb-6">
+      <button id="exportDashboard" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition duration-200 shadow">
+        <i class="fas fa-file-export mr-2"></i> Export Dashboard
+      </button>
+      <button id="printDashboard" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200 shadow">
+        <i class="fas fa-print mr-2"></i> Print Dashboard
+      </button>
+    </div>
+  </div>
+</body>
+</html> 
