@@ -16,6 +16,12 @@ const topCategoriesTable = document.getElementById("topCategoriesTable");
 
 // Initialize the dashboard
 document.addEventListener('DOMContentLoaded', async () => {
+  // Always hide dashboard-animate elements initially
+  document.querySelectorAll('.dashboard-animate').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(30px)';
+  });
+
   // Show modern loading overlay
   const loadingOverlay = document.getElementById('dashboardLoadingOverlay');
   if (loadingOverlay) loadingOverlay.classList.remove('hide');
@@ -32,19 +38,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   initializeEventListeners();
   updateDashboard();
 
-  // Trigger dashboard entry animations
-  setTimeout(() => {
-    document.querySelectorAll('.dashboard-animate').forEach(el => {
-      el.style.opacity = '';
-      el.style.transform = '';
-    });
-  }, 100);
-
   // Hide modern loading overlay after everything is ready
   if (loadingOverlay) {
     setTimeout(() => {
       loadingOverlay.classList.add('hide');
+      // Trigger dashboard entry animations only after loader is hidden
+      setTimeout(() => {
+        document.querySelectorAll('.dashboard-animate').forEach(el => {
+          el.style.opacity = '';
+          el.style.transform = '';
+        });
+      }, 100);
     }, 700);
+  } else {
+    // Fallback: trigger animations immediately if no loader
+    setTimeout(() => {
+      document.querySelectorAll('.dashboard-animate').forEach(el => {
+        el.style.opacity = '';
+        el.style.transform = '';
+      });
+    }, 100);
   }
 });
 

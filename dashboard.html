@@ -15,6 +15,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
     import { getFirestore } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js';
 
     // Your web app's Firebase configuration
     const firebaseConfig = {
@@ -35,11 +36,28 @@
     // Make Firebase available globally
     window.db = db;
     console.log("Firebase initialized successfully with Firestore");
+
+    // Check authentication state
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = 'login.html';
+      }
+    });
   </script>
   
   <script src="dashboard.js" defer></script>
 </head>
 <body class="bg-gray-50 min-h-screen p-2 sm:p-4 lg:p-8">
+  <script type="module">
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js';
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = 'login.html';
+      }
+    });
+  </script>
   <!-- Modern Dashboard Loading Overlay -->
   <div id="dashboardLoadingOverlay" class="dashboard-loading-overlay">
     <div class="dashboard-loading-logo">
@@ -68,6 +86,9 @@
           <div class="text-lg sm:text-xl lg:text-2xl bg-black bg-opacity-20 px-4 py-2 rounded-lg">
             Total: ₹<span id="totalAmount">0.00</span>
           </div>
+          <button id="logoutBtn" title="Logout" class="ml-2 bg-white bg-opacity-20 hover:bg-opacity-40 text-white px-3 py-1 rounded-lg transition duration-200 text-sm flex items-center">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
         </div>
       </div>
     </div>
@@ -244,5 +265,23 @@
       </button>
     </div>
   </div>
+  <script>
+    // Logout functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async function() {
+          try {
+            const module = await import('https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js');
+            const auth = module.getAuth();
+            await module.signOut(auth);
+            window.location.href = 'login.html';
+          } catch (e) {
+            alert('Logout failed.');
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html> 

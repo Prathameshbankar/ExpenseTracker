@@ -14,6 +14,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
     import { getFirestore } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js';
 
     // Your web app's Firebase configuration
     const firebaseConfig = {
@@ -39,6 +40,15 @@
   <script src="script.js" defer></script>
 </head>
 <body class="bg-gray-50 min-h-screen p-2 sm:p-4 lg:p-8">
+  <script type="module">
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js';
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = 'login.html';
+      }
+    });
+  </script>
   <!-- Loading Screen -->
   <div id="loadingScreen" class="loading-screen">
     <div class="loading-logo">
@@ -60,7 +70,9 @@
           <a href="dashboard.html" class="bg-black bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1 rounded-lg transition duration-200 text-sm">
             <i class="fas fa-chart-line mr-1"></i> Dashboard
           </a>
-          
+          <button id="logoutBtn" title="Logout" class="ml-2 bg-white bg-opacity-20 hover:bg-opacity-40 text-white px-3 py-1 rounded-lg transition duration-200 text-sm flex items-center">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
         </div>
       </div>
     </div>
@@ -217,5 +229,23 @@
     </div>
     
   </div>
+  <script>
+    // Logout functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async function() {
+          try {
+            const module = await import('https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js');
+            const auth = module.getAuth();
+            await module.signOut(auth);
+            window.location.href = 'login.html';
+          } catch (e) {
+            alert('Logout failed.');
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>
