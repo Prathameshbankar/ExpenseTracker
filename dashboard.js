@@ -11,6 +11,7 @@ const monthSpendingElement = document.getElementById("monthSpending");
 const avgDailyElement = document.getElementById("avgDaily");
 const dashboardDateFrom = document.getElementById("dashboardDateFrom");
 const dashboardDateTo = document.getElementById("dashboardDateTo");
+const dashboardCategoryFilter = document.getElementById("dashboardCategoryFilter");
 const insightsContainer = document.getElementById("insightsContainer");
 const topCategoriesTable = document.getElementById("topCategoriesTable");
 
@@ -35,6 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Load data and initialize dashboard
   await loadExpensesFromFirebase();
+  populateCategoryFilter();
   initializeEventListeners();
   updateDashboard();
 
@@ -87,10 +89,31 @@ async function loadExpensesFromFirebase() {
   }
 }
 
+function populateCategoryFilter() {
+  // Get unique categories from expense data
+  const categories = [...new Set(expenseData.map(expense => expense.category1))].sort();
+  
+  // Clear existing options (except "All Categories")
+  dashboardCategoryFilter.innerHTML = '<option value="">All Categories</option>';
+  
+  // Add category options
+  categories.forEach(category => {
+    const option = document.createElement('option');
+    option.value = category;
+    option.textContent = category;
+    dashboardCategoryFilter.appendChild(option);
+  });
+  
+  console.log(`Populated category filter with ${categories.length} categories`);
+}
+
 function initializeEventListeners() {
   // Date range filters
   dashboardDateFrom.addEventListener("change", updateDashboard);
   dashboardDateTo.addEventListener("change", updateDashboard);
+  
+  // Category filter
+  dashboardCategoryFilter.addEventListener("change", updateDashboard);
   
   // Quick date buttons
   document.getElementById("last7Days").addEventListener("click", () => setDateRange(7));
@@ -123,13 +146,17 @@ function updateDashboard() {
 function filterDataByDateRange() {
   const fromDate = new Date(dashboardDateFrom.value);
   const toDate = new Date(dashboardDateTo.value);
+  const selectedCategory = dashboardCategoryFilter.value;
   
   filteredData = expenseData.filter(expense => {
     const expenseDate = new Date(expense.date);
-    return expenseDate >= fromDate && expenseDate <= toDate;
+    const dateInRange = expenseDate >= fromDate && expenseDate <= toDate;
+    const categoryMatch = !selectedCategory || expense.category1 === selectedCategory;
+    
+    return dateInRange && categoryMatch;
   });
   
-  console.log(`Filtered ${filteredData.length} expenses for date range`);
+  console.log(`Filtered ${filteredData.length} expenses for date range and category`);
 }
 
 function updateQuickStats() {
@@ -165,6 +192,7 @@ function updateQuickStats() {
 function updateCharts() {
   updateExpenseTrendChart();
   updateCategoryChart();
+  updateSubcategoryChart();
   updatePaymentChart();
   updateDailyPatternChart();
 }
@@ -264,6 +292,63 @@ function updateCategoryChart() {
       plugins: {
         legend: {
           position: 'bottom'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = ((context.parsed / total) * 100).toFixed(1);
+              return context.label + ': ₹' + context.parsed.toFixed(2) + ' (' + percentage + '%)';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function updateSubcategoryChart() {
+  const ctx = document.getElementById('subcategoryChart').getContext('2d');
+  
+  // Group expenses by subcategory (category2)
+  const subcategoryTotals = {};
+  filteredData.forEach(expense => {
+    const subcategory = expense.category2 && expense.category2 !== '-' ? expense.category2 : 'No Subcategory';
+    if (!subcategoryTotals[subcategory]) {
+      subcategoryTotals[subcategory] = 0;
+    }
+    subcategoryTotals[subcategory] += parseFloat(expense.amount);
+  });
+  
+  const labels = Object.keys(subcategoryTotals);
+  const data = Object.values(subcategoryTotals);
+  const colors = generateColors(labels.length);
+  
+  if (charts.subcategory) {
+    charts.subcategory.destroy();
+  }
+  
+  charts.subcategory = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: colors,
+        borderWidth: 2,
+        borderColor: '#ffffff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            maxWidth: 150,
+            usePointStyle: true
+          }
         },
         tooltip: {
           callbacks: {

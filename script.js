@@ -1,15 +1,15 @@
 // Category mapping
 const categoryMap = {
-  "Food": ["Groceries", "Restaurants", "Snacks", "Beverages"],
+  "Food": ["Groceries", "Restaurants", "Snacks", "Beverages", "Fruits", "Vegetables"],
   "Transportation": ["Fuel", "Public Transport", "Taxi", "Maintenance"],
-  "Utilities": ["Electricity", "Water", "Internet", "Mobile"],
-  "Entertainment": ["Movies", "Streaming", "Games", "Events"],
+  "Utilities": ["Electricity", "Water", "Internet", "Mobile", "Identity Document"],
+  "Entertainment": ["Movies", "Streaming", "Games", "Events", "Outings"],
   "Personal Care": ["Salon", "Cosmetics", "Clothing"],
-  "Health Care": ["Doctor", "Medicine", "Insurance"],
+  "Health Care": ["Doctor", "Medicine", "Insurance", "Hospital"],
   "Shopping": ["Electronics", "Fashion", "Home Goods"],
   "Gifts": ["Birthday", "Anniversary", "Donations"],
-  "Rent": ["Home Rent", "Office Rent"],
-  "Savings": ["Investments", "Emergency Fund"]
+  "Savings": ["Investments", "Emergency Fund"],
+  "Housing": ["Home Maintenance", "Home Improvement", "Housing Rent/EMI", "Tools", "Property Tax"]
 };
 
 // DOM elements
@@ -19,6 +19,7 @@ const subcategoryContainer = document.getElementById("subcategoryContainer");
 const tableBody = document.getElementById("tableBody");
 const totalAmountElement = document.getElementById("totalAmount");
 const searchInput = document.getElementById("searchInput");
+const filterCategory = document.getElementById("filterCategory");
 const filterSpecificDate = document.getElementById("filterSpecificDate");
 const filterDateFrom = document.getElementById("filterDateFrom");
 const filterDateTo = document.getElementById("filterDateTo");
@@ -262,6 +263,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load expenses from Firebase
   await loadExpensesFromFirebase();
   
+  // Populate category filter
+  populateCategoryFilter();
+  
   // Hide loading screen and show main content
   hideLoadingScreen();
   
@@ -269,12 +273,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   category1.addEventListener("change", handleCategoryChange);
   form.addEventListener("submit", handleFormSubmit);
   searchInput.addEventListener("input", filterTable);
+  filterCategory.addEventListener("change", filterTable);
   filterSpecificDate.addEventListener("change", filterTable);
   filterDateFrom.addEventListener("change", filterTable);
   filterDateTo.addEventListener("change", filterTable);
   resetFilterBtn.addEventListener("click", resetFilters);
   exportToCSVBtn.addEventListener("click", exportToCSV);
 });
+
+function populateCategoryFilter() {
+  // Get unique categories from expense data
+  const categories = [...new Set(expenseData.map(expense => expense.category1))].sort();
+  
+  // Clear existing options (except "All Categories")
+  filterCategory.innerHTML = '<option value="">All Categories</option>';
+  
+  // Add category options
+  categories.forEach(category => {
+    const option = document.createElement('option');
+    option.value = category;
+    option.textContent = category;
+    filterCategory.appendChild(option);
+  });
+  
+  console.log(`Populated category filter with ${categories.length} categories`);
+}
 
 function handleCategoryChange() {
   const selectedCategory = category1.value;
@@ -462,12 +485,17 @@ function renderTable(data = expenseData) {
 
 function filterTable() {
   const searchTerm = searchInput.value.toLowerCase();
+  const selectedCategory = filterCategory.value;
   const specificDate = filterSpecificDate.value;
   const fromDate = filterDateFrom.value;
   const toDate = filterDateTo.value;
   
   const filteredData = expenseData.filter(entry => {
     const entryDate = new Date(entry.date);
+    
+    // Category filter
+    const categoryMatch = !selectedCategory || entry.category1 === selectedCategory;
+    if (!categoryMatch) return false;
     
     // Specific date filter (takes priority over date range)
     if (specificDate) {
@@ -502,6 +530,7 @@ function filterTable() {
 
 function resetFilters() {
   searchInput.value = "";
+  filterCategory.value = "";
   filterSpecificDate.value = "";
   const today = new Date().toISOString().split('T')[0];
   filterDateFrom.value = today;

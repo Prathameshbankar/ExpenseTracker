@@ -144,13 +144,21 @@
       </div>
     </div>
 
-    <!-- Date Range Filter -->
+    <!-- Date Range and Category Filter -->
     <div class="bg-white rounded-xl shadow-md p-6 mb-8 dashboard-animate dashboard-stagger-5">
       <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-4 lg:space-y-0">
         <h3 class="text-lg font-semibold text-gray-800">
-          <i class="fas fa-filter mr-2 text-indigo-600"></i> Analysis Period
+          <i class="fas fa-filter mr-2 text-indigo-600"></i> Filters & Analysis Period
         </h3>
         <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+          <!-- Category Filter -->
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Category</label>
+            <select id="dashboardCategoryFilter" 
+              class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+              <option value="">All Categories</option>
+            </select>
+          </div>
           <div>
             <label class="block text-xs text-gray-500 mb-1">From Date</label>
             <input type="date" id="dashboardDateFrom" 
@@ -199,10 +207,20 @@
       </div>
     </div>
 
+    <!-- Subcategory Distribution -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8 dashboard-animate dashboard-stagger-8">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">
+        <i class="fas fa-chart-donut mr-2 text-indigo-600"></i> Subcategory Distribution
+      </h3>
+      <div class="h-80">
+        <canvas id="subcategoryChart"></canvas>
+      </div>
+    </div>
+
     <!-- Additional Analytics -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
       <!-- Payment Method Analysis -->
-      <div class="bg-white rounded-xl shadow-md p-6 dashboard-animate dashboard-stagger-8">
+      <div class="bg-white rounded-xl shadow-md p-6 dashboard-animate dashboard-stagger-9">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">
           <i class="fas fa-credit-card mr-2 text-indigo-600"></i> Payment Method Analysis
         </h3>
@@ -212,7 +230,7 @@
       </div>
 
       <!-- Daily Spending Pattern -->
-      <div class="bg-white rounded-xl shadow-md p-6 dashboard-animate dashboard-stagger-9">
+      <div class="bg-white rounded-xl shadow-md p-6 dashboard-animate dashboard-stagger-10">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">
           <i class="fas fa-calendar-check mr-2 text-indigo-600"></i> Daily Spending Pattern
         </h3>
@@ -223,7 +241,7 @@
     </div>
 
     <!-- Insights Section -->
-    <div class="bg-white rounded-xl shadow-md p-6 mb-8 dashboard-animate dashboard-stagger-10">
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8 dashboard-animate dashboard-stagger-11">
       <h3 class="text-lg font-semibold text-gray-800 mb-4">
         <i class="fas fa-lightbulb mr-2 text-indigo-600"></i> Spending Insights
       </h3>
@@ -233,7 +251,7 @@
     </div>
 
     <!-- Top Categories Table -->
-    <div class="bg-white rounded-xl shadow-md p-6 mb-8 dashboard-animate dashboard-stagger-10">
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8 dashboard-animate dashboard-stagger-12">
       <h3 class="text-lg font-semibold text-gray-800 mb-4">
         <i class="fas fa-list-ol mr-2 text-indigo-600"></i> Top Spending Categories
       </h3>
