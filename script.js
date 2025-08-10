@@ -28,11 +28,13 @@ const exportToCSVBtn = document.getElementById("exportToCSV");
 const loadingScreen = document.getElementById("loadingScreen");
 const mainContent = document.getElementById("mainContent");
 const submitBtn = document.getElementById("submitBtn");
+const dateInput = document.getElementById("date");
 
 // Data
 let expenseData = [];
 let editingIndex = -1;
 let isDataLoaded = false;
+let lastUsedDate = new Date().toISOString().split('T')[0]; // Store the last used date
 
 // Loading animation functions
 function showLoadingScreen() {
@@ -256,7 +258,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Set default dates
   const today = new Date().toISOString().split('T')[0];
-  document.getElementById("date").value = today;
+  dateInput.value = lastUsedDate || today;
   filterDateFrom.value = today;
   filterDateTo.value = today;
   
@@ -351,13 +353,13 @@ async function handleFormSubmit(e) {
     : document.getElementById("category2").value || "-";
   
   const entry = {
-    date: document.getElementById("date").value,
+    date: dateInput.value,
     category1: category1.value,
     category2: subcategoryValue,
     description: document.getElementById("description").value || "-",
     payment: document.getElementById("payment").value,
     amount: parseFloat(document.getElementById("amount").value).toFixed(2),
-    timestamp: new Date(document.getElementById("date").value).getTime()
+    timestamp: new Date(dateInput.value).getTime()
   };
 
   try {
@@ -380,10 +382,14 @@ async function handleFormSubmit(e) {
       }
     }
 
-    form.reset();
+    // Store the last used date
+    lastUsedDate = dateInput.value;
     
-    // Reset date to today and category dropdowns
-    document.getElementById("date").value = new Date().toISOString().split('T')[0];
+    // Reset form but keep the date
+    form.reset();
+    dateInput.value = lastUsedDate;
+    
+    // Reset category dropdowns
     handleCategoryChange();
     
     renderTable();
@@ -615,7 +621,7 @@ function editEntry(index) {
   const entry = expenseData[index];
   
   // Fill the form with the entry data
-  document.getElementById("date").value = entry.date;
+  dateInput.value = entry.date;
   document.getElementById("description").value = entry.description === '-' ? '' : entry.description;
   document.getElementById("payment").value = entry.payment;
   document.getElementById("amount").value = entry.amount;
