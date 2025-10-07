@@ -2,12 +2,12 @@
 const categoryMap = {
   "Food": ["Groceries", "Restaurants", "Snacks", "Beverages", "Fruits", "Vegetables"],
   "Transportation": ["Fuel", "Public Transport", "Taxi", "Maintenance"],
-  "Utilities": ["Electricity", "Water", "Internet", "Mobile", "Identity Document"],
+  "Utilities": ["Electricity", "Water", "Internet", "Mobile", "Identity Document", "Gas"],
   "Entertainment": ["Movies", "Streaming", "Games", "Events", "Outings"],
   "Personal Care": ["Salon", "Cosmetics", "Clothing"],
   "Health Care": ["Doctor", "Medicine", "Insurance", "Hospital"],
   "Shopping": ["Electronics", "Fashion", "Home Goods"],
-  "Gifts": ["Birthday", "Anniversary", "Donations"],
+  "Gifts": ["Birthday", "Anniversary", "Donations", "Events"],
   "Savings": ["Investments", "Emergency Fund"],
   "Housing": ["Home Maintenance", "Home Improvement", "Housing Rent/EMI", "Tools", "Property Tax"]
 };
